@@ -1,0 +1,24 @@
+body {
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+
+}
+
+#login-container {
+    background-color: rgba(240, 240, 240, 0.8); 
+    height: 100vh; 
+    overflow: auto;
+    position: relative;
+    z-index: 1; /* Posiciona o conteúdo principal na frente do carrossel */
+}
+
+#login-container .side-banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+
