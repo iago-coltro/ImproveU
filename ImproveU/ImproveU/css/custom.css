@@ -1,0 +1,97 @@
+:root {    
+    --bs-blue: #ff5c1d;
+    --bs-primary: #ff5c1d;
+    --bs-primary-rgb: 255, 92, 29;
+    --bs-primary-text-emphasis: #ff5c1d;
+    --bs-primary-bg-subtle: #ff5c1d;
+    --bs-primary-border-subtle: #ff5c1d;
+}
+
+#content-details {
+    background: rgb(251, 134, 21);
+    background: linear-gradient(0deg, rgba(251, 134, 21, 1) 0%, rgba(255, 92, 29, 1) 100%);
+    padding: 20px;
+    width: 100vw;
+    min-height: 100vh;
+}
+
+.card {
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+.card-body {
+    padding: 30px;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.nav-link {
+    color: #333;
+    text-decoration: none;
+}
+
+.nav-link:hover {
+    color: #666;
+}
+
+.nav-link.active {
+    font-weight: bold;
+}
+
+hr {
+    border: 0;
+    height: 1px;
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+    margin: 20px 0;
+}
+
+.picture-profile {
+    height: 5rem;
+    width: 5rem;
+    object-fit: cover;
+}
+
+.picture-profile.small {
+    height: 3rem;
+    width: 3rem;
+    object-fit: cover;
+}
+
+
+.btn-dark.custom {
+    background: rgb(65,65,65);
+    background: linear-gradient(90deg, rgba(65,65,65,1) 0%, rgba(1,1,1,1) 100%);
+    font-size: small;
+    font-weight: 600;
+}
+
+.divider-menu {
+    position: absolute;
+    top: -16px;
+    z-index: 1;
+    width: 100%;
+}
+
+.equal-width {
+    flex: 1;  
+    display: flex; 
+    justify-content: center;
+}
+
+footer {
+    margin-top: calc(30px * 3);
+}
+
+.footer-content {    
+    position: absolute;
+    bottom: 30px;
+    width: 100%;
+    left: 0;
+}
+
+.logo-footer {
+    height: 50px;
+    width: 50px;
+}
