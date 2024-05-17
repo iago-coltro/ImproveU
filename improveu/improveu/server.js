@@ -1,56 +1,193 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mysql = require('mysql2');
-const cors = require('cors');
+const path = require('path');
 
 const app = express();
-app.use(cors());
 app.use(bodyParser.json());
 
-const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'iftm',
-  password: 'iftm',
-  database: 'iftm',
-  connectTimeout: 30000 // 30 segundos
+const db = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: 'iftm',
+    database: 'iftm' // Adicione o nome do banco de dados aqui
 });
 
-app.post('/register', (req, res) => {
-  const { nome, email, senha, userType } = req.body;
-
-  connection.query(
-    'INSERT INTO users (nome, email, senha, userType) VALUES (?, ?, ?, ?)',
-    [nome, email, senha, userType],
-    (error, results) => {
-      if (error) {
-        console.log(error);
-        res.status(500).send('Erro ao registrar o usuário');
-      } else {
-        res.status(200).send('Usuário registrado com sucesso!');
-      }
-    }
-  );
+db.connect((err) => {
+    if (err) throw err;
+    console.log('Conectado ao banco de dados');
 });
 
-// Crie uma rota de teste
+
+// Rota para cadastrar usuário
+app.post('/cadastrar', (req, res) => {
+    const { nome, email, senha, userType } = req.body;
+    console.log(req.body);
+    const sql = 'INSERT INTO usuarios (nome, email, senha, userType) VALUES (?, ?, ?, ?)';
+    db.query(sql, [nome, email, senha, userType], (err, result) => {
+        if (err) throw err;
+        res.redirect('./student');
+    });
+});
+
+// CRUD -------------------------------------------------------------------
+
+// Rota para buscar todos os usuários
+app.get('/usuarios', (req, res) => {
+    const sql = 'SELECT * FROM usuarios';
+    db.query(sql, (err, result) => {
+        if (err) throw err;
+        res.json(result);
+    });
+});
+
+// Rota para buscar um usuário específico pelo ID
+app.get('/usuarios/:id', (req, res) => {
+    const sql = 'SELECT * FROM usuarios WHERE id = ?';
+    db.query(sql, [req.params.id], (err, result) => {
+        if (err) throw err;
+        res.json(result);
+    });
+});
+
+// Rota para atualizar um usuário
+app.put('/usuarios/:id', (req, res) => {
+    const { nome, email, senha, userType } = req.body;
+    const sql = 'UPDATE usuarios SET nome = ?, email = ?, senha = ?, userType = ? WHERE id = ?';
+    db.query(sql, [nome, email, senha, userType, req.params.id], (err, result) => {
+        if (err) throw err;
+        res.json({ message: 'Usuário atualizado com sucesso!' });
+    });
+});
+
+// Rota para deletar um usuário
+app.delete('/usuarios/:id', (req, res) => {
+    const sql = 'DELETE FROM usuarios WHERE id = ?';
+    db.query(sql, [req.params.id], (err, result) => {
+        if (err) throw err;
+        res.json({ message: 'Usuário deletado com sucesso!' });
+    });
+});
+
+
+// Teste Conexão Database
+
+app.get('/iftm', (req, res) => {
+    db.query('SELECT 1 + 1 AS solution', (err, results, fields) => {
+        if (err) throw err;
+        res.send(`Database connection test successful: ${results[0].solution}`);
+    });
+});
+
+// Teste Conexão Node Express
+
 app.get('/test', (req, res) => {
-  // Tente fazer uma consulta ao banco de dados
-  db.query('SELECT 1 + 1 AS solution', (err, results) => {
-    if (err) {
-      // Se houver um erro, envie-o como resposta
-      res.send('Erro ao conectar ao banco de dados: ' + err);
-    } else {
-      // Se a consulta for bem-sucedida, envie o resultado como resposta
-      res.send('Resultado da consulta: ' + JSON.stringify(results));
-    }
-  });
+    res.send('Teste de conexão bem-sucedido!');
 });
 
 app.listen(3000, () => {
-  console.log('API rodando na porta 3306');
+    console.log('Servidor iniciado na porta 3000');
 });
 
 
+//Rotas EJS -------------------------------------------------------------------------------------------
 
+// Definindo EJS como mecanismo de visualização
+app.set('view engine', 'ejs');
+
+// Definindo o diretório de visualizações
+app.set('views', path.join(__dirname, 'public', 'views'));
+
+// Definindo o diretório público para arquivos estáticos
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/', (req, res) => {
+    res.render('login');  // O nome do arquivo EJS na pasta de visualizações
+});
+
+app.get('/cadastro', (req, res) => {
+    res.render('cadastro');
+});
+
+app.get('/cadastroprofessor', (req, res) => {
+    res.render('cadastroprofessor');
+});
+
+app.get('/redefinirsenha', (req, res) => {
+    res.render('redefinirsenha');
+});
+
+app.get('/student', (req, res) => {
+    res.render('student');
+});
+
+app.get('/teacher', (req, res) => {
+    res.render('teacher');
+});
+
+app.get('/index', (req, res) => {
+    res.render('index');
+});
+
+// CRUD Professores ------------------------------------------------------------------------
+
+// Rota para cadastrar professor
+app.post('/cadastrarprofessor', (req, res) => {
+    const { nome, email, senha, ra } = req.body;
+    const sql = 'INSERT INTO professores (nome, email, senha, ra) VALUES (?, ?, ?, ?)';
+    db.query(sql, [nome, email, senha, ra], (err, result) => {
+        if (err) throw err;
+        res.redirect('./teacher');
+    });
+});
+
+// Rota para buscar todos os professores
+app.get('/professores', (req, res) => {
+    const sql = 'SELECT * FROM professores';
+    db.query(sql, (err, result) => {
+        if (err) throw err;
+        res.json(result);
+    });
+});
+
+// Rota para buscar um professor específico pelo ID
+app.get('/professores/:id', (req, res) => {
+    const sql = 'SELECT * FROM professores WHERE id = ?';
+    db.query(sql, [req.params.id], (err, result) => {
+        if (err) throw err;
+        res.json(result);
+    });
+});
+
+// Rota para atualizar um professor
+app.put('/professores/:id', (req, res) => {
+    const { nome, email, senha, ra } = req.body;
+    const sql = 'UPDATE professores SET nome = ?, email = ?, senha = ?, ra = ? WHERE id = ?';
+    db.query(sql, [nome, email, senha, ra, req.params.id], (err, result) => {
+        if (err) throw err;
+        res.json({ message: 'Professor atualizado com sucesso!' });
+    });
+});
+
+// Rota para deletar um professor
+app.delete('/professores/:id', (req, res) => {
+    const sql = 'DELETE FROM professores WHERE id = ?';
+    db.query(sql, [req.params.id], (err, result) => {
+        if (err) throw err;
+        res.json({ message: 'Professor deletado com sucesso!' });
+    });
+});
+
+// Rota Cadastro de Professores
+
+app.post('/cadastrarprofessor', (req, res) => {
+    const { nome, email, senha, ra } = req.body;
+    console.log(req.body);
+    const sql = 'INSERT INTO professores (nome, email, senha, ra) VALUES (?, ?, ?, ?)';
+    db.query(sql, [nome, email, senha, ra], (err, result) => {
+        if (err) throw err;
+        res.redirect('./teacher');
+    });
+});
 
 
