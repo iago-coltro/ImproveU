@@ -2,9 +2,14 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mysql = require('mysql2');
 const path = require('path');
+const multer = require('multer');
+const bcrypt = require('bcrypt');
+const session = require('express-session'); // Adicione o express-session para gerenciar sessões
+
 
 const app = express();
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true })); // Para lidar com dados de formulário
 
 const db = mysql.createConnection({
     host: 'localhost',
@@ -18,55 +23,32 @@ db.connect((err) => {
     console.log('Conectado ao banco de dados');
 });
 
-
 // Rota para cadastrar usuário
-app.post('/cadastrar', (req, res) => {
-    const { nome, email, senha, userType } = req.body;
-    console.log(req.body);
-    const sql = 'INSERT INTO usuarios (nome, email, senha, userType) VALUES (?, ?, ?, ?)';
-    db.query(sql, [nome, email, senha, userType], (err, result) => {
-        if (err) throw err;
-        res.redirect('./student');
-    });
-});
+app.post('/cadastrar', upload.single('foto_perfil'), (req, res) => {
+    const { nome, email, senha, userType, ra } = req.body;
+    const fotoPerfil = req.file ? `/uploads/${req.file.filename}` : null; // Caminho da foto de perfil (se houver)
 
-// CRUD -------------------------------------------------------------------
-
-// Rota para buscar todos os usuários
-app.get('/usuarios', (req, res) => {
-    const sql = 'SELECT * FROM usuarios';
-    db.query(sql, (err, result) => {
-        if (err) throw err;
-        res.json(result);
-    });
-});
-
-// Rota para buscar um usuário específico pelo ID
-app.get('/usuarios/:id', (req, res) => {
-    const sql = 'SELECT * FROM usuarios WHERE id = ?';
-    db.query(sql, [req.params.id], (err, result) => {
-        if (err) throw err;
-        res.json(result);
-    });
-});
-
-// Rota para atualizar um usuário
-app.put('/usuarios/:id', (req, res) => {
-    const { nome, email, senha, userType } = req.body;
-    const sql = 'UPDATE usuarios SET nome = ?, email = ?, senha = ?, userType = ? WHERE id = ?';
-    db.query(sql, [nome, email, senha, userType, req.params.id], (err, result) => {
-        if (err) throw err;
-        res.json({ message: 'Usuário atualizado com sucesso!' });
-    });
-});
-
-// Rota para deletar um usuário
-app.delete('/usuarios/:id', (req, res) => {
-    const sql = 'DELETE FROM usuarios WHERE id = ?';
-    db.query(sql, [req.params.id], (err, result) => {
-        if (err) throw err;
-        res.json({ message: 'Usuário deletado com sucesso!' });
-    });
+    if (userType === 'aluno') {
+        const sql = 'INSERT INTO alunos (nome, email, senha, foto_perfil) VALUES (?, ?, ?, ?)';
+        db.query(sql, [nome, email, senha, fotoPerfil], (err, result) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('Erro ao cadastrar aluno.');
+            }
+            res.redirect('/student');
+        });
+    } else if (userType === 'professor') {
+        const sql = 'INSERT INTO professores (nome, email, senha, ra, foto_perfil) VALUES (?, ?, ?, ?, ?)';
+        db.query(sql, [nome, email, senha, ra, fotoPerfil], (err, result) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('Erro ao cadastrar professor.');
+            }
+            res.redirect('/teacher');
+        });
+    } else {
+        res.status(400).send('Tipo de usuário inválido.');
+    }
 });
 
 
@@ -109,14 +91,6 @@ app.get('/cadastro', (req, res) => {
     res.render('cadastro');
 });
 
-app.get('/cadastroprofessor', (req, res) => {
-    res.render('cadastroprofessor');
-});
-
-app.get('/redefinirsenha', (req, res) => {
-    res.render('redefinirsenha');
-});
-
 app.get('/student', (req, res) => {
     res.render('student');
 });
@@ -129,65 +103,102 @@ app.get('/index', (req, res) => {
     res.render('index');
 });
 
-// CRUD Professores ------------------------------------------------------------------------
+app.get('/editar', (req, res) => {
+    res.render('editar');
+});
 
-// Rota para cadastrar professor
-app.post('/cadastrarprofessor', (req, res) => {
-    const { nome, email, senha, ra } = req.body;
-    const sql = 'INSERT INTO professores (nome, email, senha, ra) VALUES (?, ?, ?, ?)';
-    db.query(sql, [nome, email, senha, ra], (err, result) => {
+
+// Configuração do Multer para upload de arquivos
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/');
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + '-' + file.originalname);
+    }
+});
+const upload = multer({ storage: storage });
+
+// Configuração de sessão
+app.use(session({
+    secret: 'seu_segredo', // Substitua por uma string segura
+    resave: false,
+    saveUninitialized: true
+}));
+
+// Rotas CRUD para Alunos
+app.get('/alunos', (req, res) => {
+    const sql = 'SELECT * FROM alunos';
+    db.query(sql, (err, results) => {
         if (err) throw err;
-        res.redirect('./teacher');
+        res.json(results);
     });
 });
 
-// Rota para buscar todos os professores
-app.get('/professores', (req, res) => {
-    const sql = 'SELECT * FROM professores';
-    db.query(sql, (err, result) => {
+app.get('/alunos/:id', (req, res) => {
+    const id = req.params.id;
+    const sql = 'SELECT * FROM alunos WHERE id = ?';
+    db.query(sql, [id], (err, results) => {
         if (err) throw err;
-        res.json(result);
+        res.json(results[0]); // Retorna o primeiro resultado (o aluno)
     });
 });
 
-// Rota para buscar um professor específico pelo ID
-app.get('/professores/:id', (req, res) => {
-    const sql = 'SELECT * FROM professores WHERE id = ?';
-    db.query(sql, [req.params.id], (err, result) => {
+app.put('/alunos/:id', upload.single('foto_perfil'), (req, res) => {
+    const id = req.params.id;
+    const { nome, email, senha } = req.body;
+    const fotoPerfil = req.file ? `/uploads/${req.file.filename}` : null;
+
+    // Hash da senha (se fornecida)
+    const updateFields = { nome, email };
+    if (senha) {
+        bcrypt.hash(senha, 10, (err, hash) => {
+            if (err) throw err;
+            updateFields.senha = hash;
+            updateAluno(updateFields, fotoPerfil);
+        });
+    } else {
+        updateAluno(updateFields, fotoPerfil);
+    }
+
+    function updateAluno(updateFields, fotoPerfil) {
+        if (fotoPerfil) {
+            updateFields.foto_perfil = fotoPerfil;
+        }
+        const sql = 'UPDATE alunos SET ? WHERE id = ?';
+        db.query(sql, [updateFields, id], (err, result) => {
+            if (err) throw err;
+            res.json({ message: 'Aluno atualizado com sucesso!' });
+        });
+    }
+});
+
+app.delete('/alunos/:id', (req, res) => {
+    const id = req.params.id;
+    const sql = 'DELETE FROM alunos WHERE id = ?';
+    db.query(sql, [id], (err, result) => {
         if (err) throw err;
-        res.json(result);
+        res.json({ message: 'Aluno deletado com sucesso!' });
     });
 });
 
-// Rota para atualizar um professor
-app.put('/professores/:id', (req, res) => {
-    const { nome, email, senha, ra } = req.body;
-    const sql = 'UPDATE professores SET nome = ?, email = ?, senha = ?, ra = ? WHERE id = ?';
-    db.query(sql, [nome, email, senha, ra, req.params.id], (err, result) => {
-        if (err) throw err;
-        res.json({ message: 'Professor atualizado com sucesso!' });
-    });
+// Rotas CRUD para Professores (semelhantes às de alunos, adapte conforme necessário)
+// ...
+
+// ... (restante do código)
+
+// Rota para buscar dados do aluno logado
+app.get('/api/aluno', (req, res) => {
+    if (req.session.userId && req.session.userType === 'aluno') {
+        const sql = 'SELECT * FROM alunos WHERE id = ?';
+        db.query(sql, [req.session.userId], (err, result) => {
+            if (err) throw err;
+            res.json(result[0]); // Retorna os dados do aluno
+        });
+    } else {
+        res.status(401).send('Não autorizado'); // Usuário não logado ou não é aluno
+    }
 });
 
-// Rota para deletar um professor
-app.delete('/professores/:id', (req, res) => {
-    const sql = 'DELETE FROM professores WHERE id = ?';
-    db.query(sql, [req.params.id], (err, result) => {
-        if (err) throw err;
-        res.json({ message: 'Professor deletado com sucesso!' });
-    });
-});
-
-// Rota Cadastro de Professores
-
-app.post('/cadastrarprofessor', (req, res) => {
-    const { nome, email, senha, ra } = req.body;
-    console.log(req.body);
-    const sql = 'INSERT INTO professores (nome, email, senha, ra) VALUES (?, ?, ?, ?)';
-    db.query(sql, [nome, email, senha, ra], (err, result) => {
-        if (err) throw err;
-        res.redirect('./teacher');
-    });
-});
 
 
