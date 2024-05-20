@@ -36,38 +36,41 @@
                         <div class="row g-0">
                             <div class="col-md-12 col-lg-12 d-flex align-items-center">
                                 <div class="card-body p-4 p-lg-5 text-black">
-
-                                    <form action="http://localhost:3000/editProfile" method="post"
-                                        enctype="multipart/form-data">
+                                    <form action="/editar" method="POST" enctype="multipart/form-data">
                                         <h5 class="fw-normal mb-3 pb-3" style="letter-spacing: 1px;">Editar Perfil</h5>
 
                                         <div class="form-outline mb-4">
-                                            <input type="file" id="profilePicture" class="form-control form-control-lg"
-                                                name="profilePicture" required />
-                                            <label class="form-label" for="profilePicture">Foto de Perfil</label>
+                                            <img id="fotoPerfilPreview" src="" alt="Foto de Perfil"
+                                                class="img-fluid rounded-circle mb-2"
+                                                style="max-width: 100px; max-height: 100px; object-fit: cover;">
+                                            <input type="file" id="foto_perfil" name="foto_perfil"
+                                                class="form-control form-control-lg" />
+                                            <label class="form-label" for="foto_perfil">Foto de Perfil</label>
                                         </div>
 
                                         <div class="form-outline mb-4">
-                                            <input type="text" id="form2Example17" class="form-control form-control-lg"
-                                                name="nome" required />
-                                            <label class="form-label" for="form2Example17">Nome</label>
+                                            <input type="text" id="nome" name="nome"
+                                                class="form-control form-control-lg" value="<%- usuario.nome %>"
+                                                required />
+                                            <label class="form-label" for="nome">Nome</label>
                                         </div>
 
                                         <div class="form-outline mb-4">
-                                            <input type="email" id="form2Example27" class="form-control form-control-lg"
-                                                name="email" required />
-                                            <label class="form-label" for="form2Example27">E-mail</label>
+                                            <input type="email" id="email" name="email"
+                                                class="form-control form-control-lg" value="<%- usuario.email %>"
+                                                required />
+                                            <label class="form-label" for="email">E-mail</label>
                                         </div>
 
                                         <div class="form-outline mb-4">
-                                            <input type="password" id="form2Example37"
-                                                class="form-control form-control-lg" name="senha" required />
-                                            <label class="form-label" for="form2Example37">Senha</label>
+                                            <input type="password" id="senha" name="senha"
+                                                class="form-control form-control-lg" />
+                                            <label class="form-label" for="senha">Nova Senha (opcional)</label>
                                         </div>
 
                                         <div class="pt-1 mb-4">
-                                            <button id="btnSalvar" class="btn btn-dark btn-lg btn-block"
-                                                type="submit">Salvar Alterações</button>
+                                            <button class="btn btn-dark btn-lg btn-block" type="submit">Salvar
+                                                Alterações</button>
                                         </div>
                                     </form>
                                 </div>
@@ -79,31 +82,132 @@
         </div>
     </section>
     <script>
-        document.getElementById('btnSalvar').addEventListener('click', function () {
-            const profilePicture = document.getElementById('profilePicture').files[0];
-            const nome = document.getElementById('form2Example17').value;
-            const email = document.getElementById('form2Example27').value;
-            const senha = document.getElementById('form2Example37').value;
+        const userTypeSelect = document.getElementById('userType');
+        const raInput = document.getElementById('raInput');
 
-            let formData = new FormData();
-            formData.append('profilePicture', profilePicture);
-            formData.append('nome', nome);
-            formData.append('email', email);
-            formData.append('senha', senha);
+        // Função para adicionar os campos do formulário dinamicamente
+        function createFormFields() {
+            const form = document.getElementById('cadastroForm');
 
-            fetch('http://localhost:3000/editar', {
-                method: 'POST',
-                body: formData
-            })
-                .then(response => response.json())
-                .then(data => {
-                    console.log(data);
-                    window.location.href = '/login';
-                })
-                .catch(error => {
-                    console.error('Erro na requisição:', error);
-                });
+            const title = document.createElement('h5');
+            title.className = "fw-normal mb-3 pb-3";
+            title.style.letterSpacing = "1px";
+            title.textContent = "Editar Perfil";
+            form.appendChild(title);
+
+            const fotoPerfilPreview = document.createElement('img');
+            fotoPerfilPreview.id = "fotoPerfilPreview";
+            fotoPerfilPreview.src = "<%- usuario.foto_perfil || '/public/img/user.png' %>";
+            fotoPerfilPreview.alt = "Foto de Perfil";
+            fotoPerfilPreview.className = "img-fluid rounded-circle mb-2";
+            fotoPerfilPreview.style.maxWidth = "100px";
+            fotoPerfilPreview.style.maxHeight = "100px";
+            fotoPerfilPreview.style.objectFit = "cover";
+            form.appendChild(fotoPerfilPreview);
+
+            const fotoPerfilInput = document.createElement('input');
+            fotoPerfilInput.type = "file";
+            fotoPerfilInput.id = "foto_perfil";
+            fotoPerfilInput.name = "foto_perfil";
+            fotoPerfilInput.className = "form-control form-control-lg";
+            form.appendChild(fotoPerfilInput);
+
+            const fotoPerfilLabel = document.createElement('label');
+            fotoPerfilLabel.className = "form-label";
+            fotoPerfilLabel.htmlFor = "foto_perfil";
+            fotoPerfilLabel.textContent = "Foto de Perfil";
+            form.appendChild(fotoPerfilLabel);
+
+            const nomeInput = document.createElement('input');
+            nomeInput.type = "text";
+            nomeInput.id = "nome";
+            nomeInput.name = "nome";
+            nomeInput.className = "form-control form-control-lg";
+            nomeInput.value = "<%- usuario.nome %>";
+            nomeInput.required = true;
+            form.appendChild(nomeInput);
+
+            const nomeLabel = document.createElement('label');
+            nomeLabel.className = "form-label";
+            nomeLabel.htmlFor = "nome";
+            nomeLabel.textContent = "Nome";
+            form.appendChild(nomeLabel);
+
+            const emailInput = document.createElement('input');
+            emailInput.type = "email";
+            emailInput.id = "email";
+            emailInput.name = "email";
+            emailInput.className = "form-control form-control-lg";
+            emailInput.value = "<%- usuario.email %>";
+            emailInput.required = true;
+            form.appendChild(emailInput);
+
+            const emailLabel = document.createElement('label');
+            emailLabel.className = "form-label";
+            emailLabel.htmlFor = "email";
+            emailLabel.textContent = "E-mail";
+            form.appendChild(emailLabel);
+
+            const senhaInput = document.createElement('input');
+            senhaInput.type = "password";
+            senhaInput.id = "senha";
+            senhaInput.name = "senha";
+            senhaInput.className = "form-control form-control-lg";
+            form.appendChild(senhaInput);
+
+            const senhaLabel = document.createElement('label');
+            senhaLabel.className = "form-label";
+            senhaLabel.htmlFor = "senha";
+            senhaLabel.textContent = "Nova Senha (opcional)";
+            form.appendChild(senhaLabel);
+
+            const submitButton = document.createElement('button');
+            submitButton.className = "btn btn-dark btn-lg btn-block";
+            submitButton.type = "submit";
+            submitButton.textContent = "Salvar Alterações";
+            form.appendChild(submitButton);
+        }
+
+        // Chama a função para criar os campos do formulário quando a página carregar
+        createFormFields();
+
+        // Pré-visualização da foto de perfil
+        const fotoPerfilInput = document.getElementById('foto_perfil');
+        const fotoPerfilPreview = document.getElementById('fotoPerfilPreview');
+
+        fotoPerfilInput.addEventListener('change', () => {
+            const file = fotoPerfilInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    fotoPerfilPreview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
         });
+    </script>
+
+    <script>
+        fetch('http://localhost:3000/editar', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro ao editar perfil: ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data);
+                window.location.href = '/login';
+            })
+            .catch(error => {
+                console.error('Erro na requisição:', error);
+                // Exibir mensagem de erro para o usuário
+                alert('Erro ao editar perfil. Por favor, tente novamente.');
+            });
+
     </script>
 </body>
 

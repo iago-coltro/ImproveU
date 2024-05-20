@@ -26,20 +26,18 @@
                     <div class="d-flex align-items-center justify-content-around" style="width: 100%;">
                         <!-- Agrupar imagem e botões -->
                         <div class="d-flex align-items-center">
-                            <img src="https://img.freepik.com/fotos-gratis/jovem-barbudo-com-camisa-listrada_273609-5677.jpg?w=826&t=st=1716173847~exp=1716174447~hmac=6b63eb2935a7b26611ec9a9ef673efbf7c654bd399bd91bdb8991735e9ed5d32"
-                                class="img-fluid picture-profile rounded me-4" alt="..."
-                                style="max-width: 90px; max-height: 100px; object-fit: cover;">
+                            <img id="fotoPerfilProfessor" src="" alt="" class="img-fluid picture-profile rounded me-4"
+                                alt="..." style="max-width: 90px; max-height: 100px; object-fit: cover;">
                             <!-- Adicionei uma margem à direita para separar a imagem dos botões -->
                             <div>
-                                <h5 class="mb-0" id="nome">LUCAS AMARAL</h5>
+                                <h3 id="nomeProfessor"></h3>
                                 <!-- Botão de Menu (Hamburguer) -->
                                 <button type="button" class="btn btn-dark btn-sm">
                                     Treinos
                                 </button>
                             </div>
                         </div>
-                        <!-- Espaço vazio para manter o layout -->
-                        <div class="equal-width"></div>
+
                         <div class="equal-width">
                             <!-- Botão para abrir o modal do professor -->
                             <button type="button" class="btn btn-dark btn-sm" id="openModalButton">
@@ -196,6 +194,23 @@
 <script>document.getElementById("endsair").addEventListener("click", function () {
         window.location.href = "/";
     });</script>
+
+
+<script>
+    fetch('/api/professor')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('nomeProfessor').textContent = data.nome;
+            document.getElementById('fotoPerfilProfessor').src = data.foto_perfil || '/public/img/user.png'; // Imagem padrão se não houver foto
+        })
+        .catch(error => {
+            console.error('Erro ao buscar dados do professor:', error);
+            // Lógica para lidar com o erro (ex: exibir mensagem de erro)
+        });
+</script>
+
+
+
 </body>
 
 </html>

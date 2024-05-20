@@ -26,16 +26,11 @@
       <div class="card-body p-3">
         <div class="my-4">
           <div class="d-flex align-items-center justify-content-around" style="width: 100%;">
-            <!-- Agrupar imagem e botões -->
             <div class="d-flex align-items-center">
-              <img
-                src="https://img.freepik.com/fotos-gratis/jovem-barbudo-com-camisa-listrada_273609-5677.jpg?w=826&t=st=1716173847~exp=1716174447~hmac=6b63eb2935a7b26611ec9a9ef673efbf7c654bd399bd91bdb8991735e9ed5d32"
-                class="img-fluid picture-profile rounded me-4" alt="..."
+              <img id="fotoPerfilAluno" src="" class="img-fluid picture-profile rounded me-4" alt="Foto de Perfil"
                 style="max-width: 90px; max-height: 100px; object-fit: cover;">
-              <!-- Adicionei uma margem à direita para separar a imagem dos botões -->
               <div>
-                <h5 class="mb-0" id="nome">LUCAS AMARAL</h5>
-                <!-- Botão de Menu (Hamburguer) -->
+                <h5 class="mb-0" id="nomeAluno"></h5>
                 <button type="button" class="btn btn-dark btn-sm">
                   Treinos
                 </button>
@@ -48,16 +43,10 @@
                 <button type="button" class="btn btn-dark btn-sm">
                   Feedback
                 </button>
-
               </div>
             </div>
-            <!-- Espaço vazio para manter o layout -->
             <div class="equal-width"></div>
             <div class="equal-width">
-              <!-- Botão para abrir o modal do professor -->
-              <button type="button" class="btn btn-dark btn-sm">
-                Professor
-              </button>
               <button type="button" class="btn btn-dark btn-sm" id="openModalButton">
                 Editar Perfil
               </button>
@@ -161,6 +150,38 @@
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-beta1/js/bootstrap.bundle.min.js"
     integrity="sha384-pzjw8f+ua7Kw1TIq0v8FqFjcJ6pajs/rfdfs3SO+kD4Ck5BdPtF+to8xM6B5z6W5"
     crossorigin="anonymous"></script>
+
+  <script>
+    // Busca os dados do aluno logado
+    fetch('/api/aluno')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Erro ao buscar dados do aluno: ' + response.statusText);
+        }
+        return response.json();
+      })
+      .then(aluno => {
+        document.getElementById('nomeAluno').textContent = aluno.nome;
+        document.getElementById('fotoPerfilAluno').src = aluno.foto_perfil || '/public/img/user.png';
+      })
+      .catch(error => {
+        console.error(error);
+        alert('Erro ao carregar os dados do aluno. Por favor, tente novamente mais tarde.');
+      });
+
+
+    document.getElementById("openModalButton").addEventListener("click", function () {
+      window.location.href = "/editar";
+    });
+
+    document.getElementById("endsair").addEventListener("click", function () {
+      // Requisição para encerrar a sessão
+      fetch('/logout', { method: 'POST' })
+        .then(() => {
+          window.location.href = "/";
+        });
+    });
+  </script>
 
 </body>
 
